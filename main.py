@@ -13,7 +13,7 @@ def run(p: Playwright) -> None:
     page = context.new_page()
     page.goto("https://ca.indeed.com/jobs?q=front+end+developer")
 
-    time.sleep(1)  # wait for elements to be actionable in DOM
+    time.sleep(1)  # wait for client-side redirect (adding of "vjk" query param)
 
     filer_by_date_posted(page)
     page.get_by_label("close", exact=True).click()  # close subscribe to updates modal
