@@ -6,7 +6,8 @@ from page_actions import filer_by_date_posted, filter_by_programming_languages
 from models import JobPosting
 
 BASE_URL = "https://ca.indeed.com"
-JOB_SEARCH_PAGE = f"{BASE_URL}/jobs?q=front+end+developer"
+JOB_SEARCH_PAGE = rf"{BASE_URL}/jobs?q=front+end+developer&l=Toronto%2C+ON&radius=50"
+JOB_ID_PARAM = "&vjk=[a-zA-Z0-9]+"
 
 
 def run(p: Playwright) -> None:
@@ -18,7 +19,7 @@ def run(p: Playwright) -> None:
     page.goto(JOB_SEARCH_PAGE)
 
     # a client-side redirect occurs where the job id of the first listed job is appended as a query param of "vjk"
-    expect(page).to_have_url(re.compile(f"{re.escape(JOB_SEARCH_PAGE)}&vjk=[a-zA-Z0-9]+"))
+    expect(page).to_have_url(re.compile(f"{re.escape(JOB_SEARCH_PAGE)}{JOB_ID_PARAM}"))
 
     filer_by_date_posted(page)
     page.get_by_label("close", exact=True).click()  # close subscribe to updates modal
