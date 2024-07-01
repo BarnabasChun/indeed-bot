@@ -1,6 +1,5 @@
 import re
 from playwright.sync_api import Playwright, sync_playwright, expect
-import time
 
 from page_actions import filer_by_date_posted, filter_by_programming_languages
 from models import JobPosting
