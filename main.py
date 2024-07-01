@@ -1,9 +1,12 @@
 import re
-from playwright.sync_api import Playwright, sync_playwright
+from playwright.sync_api import Playwright, sync_playwright, expect
 import time
 
 from page_actions import filer_by_date_posted, filter_by_programming_languages
 from models import JobPosting
+
+BASE_URL = "https://ca.indeed.com"
+JOB_SEARCH_PAGE = f"{BASE_URL}/jobs?q=front+end+developer"
 
 
 def run(p: Playwright) -> None:
@@ -11,9 +14,11 @@ def run(p: Playwright) -> None:
     context = browser.new_context()
 
     page = context.new_page()
-    page.goto("https://ca.indeed.com/jobs?q=front+end+developer")
 
-    time.sleep(1)  # wait for client-side redirect (adding of "vjk" query param)
+    page.goto(JOB_SEARCH_PAGE)
+
+    # a client-side redirect occurs where the job id of the first listed job is appended as a query param of "vjk"
+    expect(page).to_have_url(re.compile(f"{re.escape(JOB_SEARCH_PAGE)}&vjk=[a-zA-Z0-9]+"))
 
     filer_by_date_posted(page)
     page.get_by_label("close", exact=True).click()  # close subscribe to updates modal
