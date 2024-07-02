@@ -85,6 +85,9 @@ def run(p: Playwright) -> None:
                 )
             )
 
+    # TODO: loop while not on last page (i.e. there is a get_by_test_id("pagination-page-next") element)
+    # TODO: email list to self
+    print(job_postings)
     page.pause()  # TODO: Remove after dev complete
 
     # # ---------------------
