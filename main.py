@@ -1,6 +1,6 @@
 import time
 import re
-from playwright.sync_api import Playwright, sync_playwright, expect
+from playwright.sync_api import Playwright, sync_playwright, expect, TimeoutError
 
 from page_actions import filer_by_date_posted, filter_by_programming_languages, search_for_jobs
 from models import JobPosting, DatePostedOptions, ProgrammingLanguageOption
@@ -54,14 +54,23 @@ def run(p: Playwright) -> None:
     job_link_elements = page.get_by_role("button", name=re.compile("^full details of.*", re.IGNORECASE)).all()
     job_postings: list[JobPosting] = []
 
-    for link_element in job_link_elements:
+    for i, link_element in enumerate(job_link_elements):
         job_title = link_element.text_content()
 
         if re.search(r"(?i)front[-\s]?end", job_title):
             job_postings.append(JobPosting(title=job_title, url=link_element.get_attribute("href")))
+            print(f"Job posting matching desired title found: {job_title}")
             continue
 
-    # TODO: check for contents within posting to see if if keywords, "React", "Javascript", "Typescript", etc. exist
+        if i > 0:
+            link_element.click()
+            expect(page.get_by_test_id("jobsearch-JobInfoHeader-title")).to_contain_text(job_title)
+
+        job_description = page.locator("#jobDescriptionText")
+
+        if re.search(r'\b(React|JavaScript|TypeScript|Node)\b', job_description.text_content()):
+            print(f"Job posting matching desired keywords found: {job_title}")
+            job_postings.append(JobPosting(title=job_title, url=link_element.get_attribute("href")))
 
     page.pause()  # TODO: Remove after dev complete
 
