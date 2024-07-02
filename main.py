@@ -56,9 +56,16 @@ def run(p: Playwright) -> None:
 
     for i, link_element in enumerate(job_link_elements):
         job_title = link_element.text_content()
+        company_name = page.get_by_test_id("inlineHeader-companyName").text_content()
 
         if re.search(r"(?i)front[-\s]?end", job_title):
-            job_postings.append(JobPosting(title=job_title, url=link_element.get_attribute("href")))
+            job_postings.append(
+                JobPosting(
+                    title=job_title,
+                    url=link_element.get_attribute("href"),
+                    company_name=company_name
+                )
+            )
             print(f"Job posting matching desired title found: {job_title}")
             continue
 
@@ -70,7 +77,13 @@ def run(p: Playwright) -> None:
 
         if re.search(r'\b(React|JavaScript|TypeScript|Node)\b', job_description.text_content()):
             print(f"Job posting matching desired keywords found: {job_title}")
-            job_postings.append(JobPosting(title=job_title, url=link_element.get_attribute("href")))
+            job_postings.append(
+                JobPosting(
+                  title=job_title,
+                  url=link_element.get_attribute("href"),
+                  company_name=company_name
+                )
+            )
 
     page.pause()  # TODO: Remove after dev complete
 

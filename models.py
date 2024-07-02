@@ -6,6 +6,7 @@ from enum import Enum
 class JobPosting:
     url: str
     title: str
+    company_name: str
 
 
 @dataclass
