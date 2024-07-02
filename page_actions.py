@@ -3,6 +3,12 @@ from playwright.sync_api import Page
 from models import DatePostedOptions, ProgrammingLanguageOption
 
 
+def search_for_jobs(page: Page, title: str, city: str):
+    page.get_by_placeholder("Job title, keywords, or").fill(title)
+    page.get_by_placeholder("City, province, or \"remote\"").fill(city)
+    page.get_by_role("button", name="Find jobs").click()
+
+
 def filer_by_date_posted(page: Page, date_posted_option: DatePostedOptions) -> None:
     page.get_by_role("button", name="Date posted filter").click()
 
