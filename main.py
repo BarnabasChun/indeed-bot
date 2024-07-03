@@ -1,12 +1,65 @@
 import time
 import re
-from playwright.sync_api import Playwright, sync_playwright, expect, TimeoutError
+import random
+from playwright.sync_api import Playwright, sync_playwright, expect, TimeoutError, Page
 
 from page_actions import filer_by_date_posted, filter_by_programming_languages, search_for_jobs
 from models import JobPosting, DatePostedOptions, ProgrammingLanguageOption
 
 BASE_URL = "https://ca.indeed.com"
 JOB_ID_PARAM_PATTERN = "&vjk=[a-zA-Z0-9]+"
+
+
+def scrape_job_postings(page: Page) -> list[JobPosting]:
+    job_postings: list[JobPosting] = []
+
+    while True:
+        job_link_elements = page.get_by_role("button", name=re.compile("^full details of.*", re.IGNORECASE)).all()
+
+        for i, link_element in enumerate(job_link_elements):
+            job_title = link_element.text_content()
+            company_name = page.get_by_test_id("inlineHeader-companyName").text_content()
+
+            if re.search(r"(?i)front[-\s]?end", job_title):
+                job_postings.append(
+                    JobPosting(
+                        title=job_title,
+                        url=link_element.get_attribute("href"),
+                        company_name=company_name
+                    )
+                )
+                print(f"Job posting matching desired title found: {job_title}")
+                continue
+
+            if i > 0:
+                random_delay = random.uniform(0.6, 1.2)
+                time.sleep(random_delay)
+                link_element.click()
+                try:
+                    expect(page.get_by_test_id("jobsearch-JobInfoHeader-title")).to_contain_text(job_title)
+                except AssertionError as e:
+                    print(f"Error while checking that job posting loaded: {e}")
+                    break
+
+            job_description = page.locator("#jobDescriptionText")
+
+            if re.search(r'\b(React|JavaScript|TypeScript|Node)\b', job_description.text_content()):
+                print(f"Job posting matching desired keywords found: {job_title}")
+                job_postings.append(
+                    JobPosting(
+                        title=job_title,
+                        url=link_element.get_attribute("href"),
+                        company_name=company_name
+                    )
+                )
+
+        try:
+            page.get_by_test_id("pagination-page-next").click(timeout=2000)
+        except TimeoutError:
+            print("reached last page")
+            break
+
+    return job_postings
 
 
 def run(p: Playwright) -> None:
@@ -36,7 +89,7 @@ def run(p: Playwright) -> None:
     from_age_query = f"&fromage={num_days_query_value}"
 
     expect(page).to_have_url(
-        re.compile(f"{re.escape(job_search_page)}&radius=50{from_age_query}{JOB_ID_PARAM_PATTERN}")
+        re.compile(f"{re.escape(job_search_page)}(&radius=50)?{from_age_query}{JOB_ID_PARAM_PATTERN}")
     )
 
     filter_by_programming_languages(page, [
@@ -51,43 +104,11 @@ def run(p: Playwright) -> None:
         re.compile(f"{re.escape(job_search_page)}{from_age_query}&sc=.+{JOB_ID_PARAM_PATTERN}")
     )
 
-    job_link_elements = page.get_by_role("button", name=re.compile("^full details of.*", re.IGNORECASE)).all()
-    job_postings: list[JobPosting] = []
-
-    for i, link_element in enumerate(job_link_elements):
-        job_title = link_element.text_content()
-        company_name = page.get_by_test_id("inlineHeader-companyName").text_content()
-
-        if re.search(r"(?i)front[-\s]?end", job_title):
-            job_postings.append(
-                JobPosting(
-                    title=job_title,
-                    url=link_element.get_attribute("href"),
-                    company_name=company_name
-                )
-            )
-            print(f"Job posting matching desired title found: {job_title}")
-            continue
-
-        if i > 0:
-            link_element.click()
-            expect(page.get_by_test_id("jobsearch-JobInfoHeader-title")).to_contain_text(job_title)
-
-        job_description = page.locator("#jobDescriptionText")
-
-        if re.search(r'\b(React|JavaScript|TypeScript|Node)\b', job_description.text_content()):
-            print(f"Job posting matching desired keywords found: {job_title}")
-            job_postings.append(
-                JobPosting(
-                  title=job_title,
-                  url=link_element.get_attribute("href"),
-                  company_name=company_name
-                )
-            )
-
-    # TODO: loop while not on last page (i.e. there is a get_by_test_id("pagination-page-next") element)
-    # TODO: email list to self
+    job_postings = scrape_job_postings(page)
     print(job_postings)
+
+    # TODO: email list to self
+
     page.pause()  # TODO: Remove after dev complete
 
     # # ---------------------
