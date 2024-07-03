@@ -28,7 +28,7 @@ def scrape_job_postings(page: Page) -> list[JobPosting]:
                         company_name=company_name
                     )
                 )
-                print(f"Job posting matching desired title found: {job_title}")
+                print(f"Job posting matching desired title found: {job_title} at {company_name}")
                 continue
 
             if i > 0:
@@ -44,7 +44,7 @@ def scrape_job_postings(page: Page) -> list[JobPosting]:
             job_description = page.locator("#jobDescriptionText")
 
             if re.search(r'\b(React|JavaScript|TypeScript|Node)\b', job_description.text_content()):
-                print(f"Job posting matching desired keywords found: {job_title}")
+                print(f"Job posting matching desired keywords found: {job_title} at {company_name}")
                 job_postings.append(
                     JobPosting(
                         title=job_title,
