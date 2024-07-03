@@ -1,13 +1,16 @@
 import time
 import re
 import random
+from dotenv import load_dotenv
 from playwright.sync_api import Playwright, sync_playwright, expect, TimeoutError, Page
 
+from email_helpers import email_job_postings
 from page_actions import filer_by_date_posted, filter_by_programming_languages, search_for_jobs
 from models import JobPosting, DatePostedOptions, ProgrammingLanguageOption
 
 BASE_URL = "https://ca.indeed.com"
 JOB_ID_PARAM_PATTERN = "&vjk=[a-zA-Z0-9]+"
+load_dotenv()
 
 
 def scrape_job_postings(page: Page) -> list[JobPosting]:
@@ -18,13 +21,15 @@ def scrape_job_postings(page: Page) -> list[JobPosting]:
 
         for i, link_element in enumerate(job_link_elements):
             job_title = link_element.text_content()
-            company_name = page.get_by_test_id("inlineHeader-companyName").text_content()
+            link_path = link_element.get_attribute("href")
+            link_url = f"{BASE_URL}{link_path}"
+            company_name = page.get_by_test_id("inlineHeader-companyName").inner_text()
 
             if re.search(r"(?i)front[-\s]?end", job_title):
                 job_postings.append(
                     JobPosting(
                         title=job_title,
-                        url=link_element.get_attribute("href"),
+                        url=link_url,
                         company_name=company_name
                     )
                 )
@@ -48,7 +53,7 @@ def scrape_job_postings(page: Page) -> list[JobPosting]:
                 job_postings.append(
                     JobPosting(
                         title=job_title,
-                        url=link_element.get_attribute("href"),
+                        url=link_url,
                         company_name=company_name
                     )
                 )
@@ -105,11 +110,7 @@ def run(p: Playwright) -> None:
     )
 
     job_postings = scrape_job_postings(page)
-    print(job_postings)
-
-    # TODO: email list to self
-
-    page.pause()  # TODO: Remove after dev complete
+    email_job_postings(job_postings)
 
     # # ---------------------
     context.close()
