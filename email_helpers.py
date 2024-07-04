@@ -30,7 +30,7 @@ def email_job_postings(job_postings: list[JobPosting]) -> None:
     msg = MIMEMultipart()
     msg['From'] = from_email
     msg['To'] = to_email
-    msg['Subject'] = 'Job Postings'
+    msg['Subject'] = 'Job Postings' # TODO add date info based on selected DatePostedOptions
     msg.attach(MIMEText(email_body, 'html'))
 
     with smtplib.SMTP("smtp.gmail.com", 587) as connection:
