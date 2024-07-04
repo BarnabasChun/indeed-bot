@@ -6,7 +6,7 @@ from playwright.sync_api import Playwright, sync_playwright, expect, TimeoutErro
 
 from email_helpers import email_job_postings
 from page_actions import filer_by_date_posted, filter_by_programming_languages, search_for_jobs
-from models import JobPosting, DatePostedOptions, ProgrammingLanguageOption
+from models import JobPosting, DatePostedOption, ProgrammingLanguageOption
 
 BASE_URL = "https://ca.indeed.com"
 JOB_ID_PARAM_PATTERN = "&vjk=[a-zA-Z0-9]+"
@@ -86,7 +86,7 @@ def run(p: Playwright) -> None:
         re.compile(f"{re.escape(job_search_page)}&from=searchOnHP{JOB_ID_PARAM_PATTERN}")
     )
 
-    selected_date_posted_option = DatePostedOptions.LAST_WEEK
+    selected_date_posted_option = DatePostedOption.LAST_WEEK
     filer_by_date_posted(page, selected_date_posted_option)
     page.get_by_label("close", exact=True).click()  # close subscribe to updates modal
 

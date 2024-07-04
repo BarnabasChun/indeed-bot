@@ -1,6 +1,6 @@
 from playwright.sync_api import Page
 
-from models import DatePostedOptions, ProgrammingLanguageOption
+from models import DatePostedOption, ProgrammingLanguageOption
 
 
 def search_for_jobs(page: Page, title: str, city: str):
@@ -9,7 +9,7 @@ def search_for_jobs(page: Page, title: str, city: str):
     page.get_by_role("button", name="Find jobs").click()
 
 
-def filer_by_date_posted(page: Page, date_posted_option: DatePostedOptions) -> None:
+def filer_by_date_posted(page: Page, date_posted_option: DatePostedOption) -> None:
     page.get_by_role("button", name="Date posted filter").click()
 
     page.get_by_role("link", name=date_posted_option.value.label).click()

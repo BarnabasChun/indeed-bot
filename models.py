@@ -15,7 +15,7 @@ class FilterOption:
     label: str
 
 
-class DatePostedOptions(Enum):
+class DatePostedOption(Enum):
     LAST_DAY = FilterOption(days=1, label="Last 24 hours")
     LAST_3_DAYS = FilterOption(days=3, label="Last 3 days")
     LAST_WEEK = FilterOption(days=7, label="Last 7 days")
